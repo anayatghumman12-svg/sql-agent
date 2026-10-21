@@ -40,15 +40,15 @@ SELECT 1 + floor(random() * 1700)::int,
        END                                   -- no ELSE => NULL
 FROM (SELECT random() AS r FROM generate_series(1, 20000)) AS t;
 
--- Order items: 1-4 per order (~50,000 total).
--- unit_price differs from the current product price for ~30% of rows
--- (simulates price changes over time) => trap 2.
+-- Order items: 1-4 per order (~60,000 total).
+-- 50% of rows were sold at an older, LOWER price (0.5x-0.8x of today's),
+-- so using products.price overstates revenue => trap 2.
 INSERT INTO order_items (order_id, product_id, quantity, unit_price)
 SELECT t.order_id,
        t.product_id,
        t.quantity,
-       round((p.price * CASE WHEN random() < 0.30
-                             THEN 0.8 + random() * 0.4
+       round((p.price * CASE WHEN random() < 0.50
+                             THEN 0.5 + random() * 0.3
                              ELSE 1
                         END)::numeric, 2)
 FROM (
