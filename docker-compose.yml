@@ -10,6 +10,34 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d:ro   # init scripts run once, alphabetically
+    healthcheck:
+      # -h 127.0.0.1 forces TCP: during first-time init Postgres only listens
+      # on a unix socket, so this stays "unhealthy" until init really finishes.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d shop"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+
+  worker:
+    build: .
+    command: celery -A app.celery_app:celery_app worker --loglevel=INFO
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
 
 volumes:
   pgdata:

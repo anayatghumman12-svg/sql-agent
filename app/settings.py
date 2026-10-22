@@ -22,3 +22,19 @@ SQL_TIMEOUT_MS: int = 10_000
 STATUS_PENDING: str = "pending"
 STATUS_DONE: str = "done"
 STATUS_FAILED: str = "failed"
+# Logging
+LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+LOG_FORMAT: str = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+
+# Redis key layout: each job lives under "job:<id>"
+JOB_KEY_PREFIX: str = "job:"
+
+# Request validation
+MIN_QUESTION_LENGTH: int = 3
+MAX_QUESTION_LENGTH: int = 500
+
+# Placeholder task (replaced by the real agent on Day 5-6)
+DUMMY_TASK_SECONDS: int = 5
+
+# Failure message when the worker itself crashes
+REASON_INTERNAL_ERROR: str = "Internal error while processing the job"

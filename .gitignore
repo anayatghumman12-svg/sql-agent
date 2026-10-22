@@ -1,9 +1,6 @@
 .venv/
+.git/
+.env
 __pycache__/
 *.pyc
-.env
 data/
-*.joblib
-*.csv
-*.sql.gz
-.DS_Store
