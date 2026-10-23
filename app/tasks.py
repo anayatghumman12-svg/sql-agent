@@ -3,6 +3,7 @@ import logging
 import time
 
 from app import settings
+from app.cache import store_cached_answer
 from app.celery_app import celery_app
 from app.jobs import save_job
 
@@ -23,15 +24,20 @@ def run_agent_task(job_id: str, question: str) -> None:
     logger.info("Job %s started: %r", job_id, question)
     try:
         # Placeholder for the real agent: simulates slow work so the
-        # "pending" state is visible when polling.
+        # "pending" state and the cache speed-up are both visible.
         time.sleep(settings.DUMMY_TASK_SECONDS)
-        save_job(job_id, {
-            "status": settings.STATUS_DONE,
+        result = {
             "answer": f"[dummy] You asked: {question}",
             "sql_used": "SELECT 1",
             "attempts": 1,
+        }
+        save_job(job_id, {
+            "status": settings.STATUS_DONE,
+            **result,
             "cached": False,
         })
+        # Only successful answers are cached; failures are never stored.
+        store_cached_answer(question, result)
         logger.info("Job %s finished", job_id)
     except Exception:
         # A crashing worker must not leave the job "pending" forever.

@@ -128,3 +128,15 @@ docker compose up --build
 ## Known limitations
 
 TBD (to be filled in after testing).
+Only successful answers are cached (24-hour TTL); failed jobs are never cached. Normalisation is deliberately conservative (lowercase, punctuation removed, whitespace collapsed) and does not match synonyms, because merging two different questions would return a wrong answer.
+
+Measured through the API (placeholder agent with 5 s of simulated work; times include HTTP and polling):
+
+| Request | Time | cached |
+|---|---|---|
+| First ask | 5164 ms | false |
+| Same question again | 48 ms | true |
+| Same question, different spacing/case/punctuation | 49 ms | true |
+| A different question | 5102 ms | false |
+
+These timings will be re-measured with the real agent.

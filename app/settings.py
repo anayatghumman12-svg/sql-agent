@@ -38,3 +38,11 @@ DUMMY_TASK_SECONDS: int = 5
 
 # Failure message when the worker itself crashes
 REASON_INTERNAL_ERROR: str = "Internal error while processing the job"
+# Cache
+CACHE_KEY_PREFIX: str = "cache:"
+# Normalisation removes everything except word characters and whitespace,
+# so "Total revenue?" and "total revenue" map to the same cache entry.
+NORMALIZE_STRIP_PATTERN: str = r"[^\w\s]"
+# Fields of a finished job that are worth reusing. Status and the cached
+# flag are per-job, so they are not stored.
+CACHED_FIELDS: tuple[str, ...] = ("answer", "sql_used", "attempts")

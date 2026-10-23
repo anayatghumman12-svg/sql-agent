@@ -6,12 +6,8 @@ from typing import Any, Optional
 import redis
 
 from app import settings
-
+from app.redis_client import client as _client
 logger = logging.getLogger(__name__)
-
-# One shared client; decode_responses returns str instead of bytes.
-_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
-
 
 def _key(job_id: str) -> str:
     """Build the Redis key for a job.

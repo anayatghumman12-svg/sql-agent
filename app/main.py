@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from app import settings
+from app.cache import get_cached_answer
 from app.jobs import load_job, save_job
 from app.tasks import run_agent_task
 
@@ -32,15 +33,29 @@ class AskResponse(BaseModel):
 
 @app.post("/ask", response_model=AskResponse)
 def ask(req: AskRequest) -> AskResponse:
-    """Queue a question for the agent and return a job id immediately.
+    """Answer from the cache if possible, otherwise queue the agent.
 
     Args:
         req: Request body containing the question.
 
     Returns:
-        AskResponse with the job id to poll.
+        AskResponse with the job id to poll. On a cache hit the job is
+        already "done" by the time this returns.
     """
     job_id = uuid.uuid4().hex
+
+    cached = get_cached_answer(req.question)
+    if cached is not None:
+        # Cache hit: no worker involved. The client still polls /status as
+        # usual, so the API contract is identical for hits and misses.
+        save_job(job_id, {
+            "status": settings.STATUS_DONE,
+            **cached,
+            "cached": True,
+        })
+        logger.info("Job %s served from cache", job_id)
+        return AskResponse(job_id=job_id)
+
     # Save "pending" BEFORE queuing: otherwise a fast worker could finish and
     # write "done", and our pending write would then overwrite it.
     save_job(job_id, {"status": settings.STATUS_PENDING})
