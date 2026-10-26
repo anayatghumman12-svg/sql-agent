@@ -10,7 +10,8 @@ JOB_TTL_SECONDS: int = 60 * 60 * 24
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL", "postgresql://agent_ro:agent_ro@postgres:5432/shop"
 )
-
+# "anthropic" or "google". Lets us switch model provider from .env alone.
+LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "anthropic")
 # Agent
 MAX_ATTEMPTS: int = 3
 LLM_MODEL: str = os.getenv("LLM_MODEL", "claude-sonnet-4-6")
@@ -46,3 +47,17 @@ NORMALIZE_STRIP_PATTERN: str = r"[^\w\s]"
 # Fields of a finished job that are worth reusing. Status and the cached
 # flag are per-job, so they are not stored.
 CACHED_FIELDS: tuple[str, ...] = ("answer", "sql_used", "attempts")
+# LLM call behaviour. Temperature 0 keeps SQL generation as repeatable as possible.
+LLM_TEMPERATURE: float = 0.0
+LLM_MAX_TOKENS: int = 1024
+LLM_TIMEOUT_SECONDS: int = 60
+LLM_MAX_RETRIES: int = 2          # network-level retries inside the SDK, not agent attempts
+
+# Database access
+DB_CONNECT_TIMEOUT_SECONDS: int = 5
+SCHEMA_NAME: str = "public"
+# Text columns with at most this many distinct values get their values
+# listed in the schema description (e.g. order status), so the model can
+# see what the data actually contains.
+SCHEMA_MAX_DISTINCT_VALUES: int = 15
+SCHEMA_PROFILED_TYPES: tuple[str, ...] = ("text", "character varying")

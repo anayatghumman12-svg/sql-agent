@@ -1,8 +1,8 @@
-"""Celery tasks. The real agent loop replaces the dummy body on Day 5-6."""
+"""Celery tasks: run the agent in the background and store the outcome."""
 import logging
-import time
 
 from app import settings
+from app.agent import run_agent
 from app.cache import store_cached_answer
 from app.celery_app import celery_app
 from app.jobs import save_job
@@ -23,14 +23,7 @@ def run_agent_task(job_id: str, question: str) -> None:
     """
     logger.info("Job %s started: %r", job_id, question)
     try:
-        # Placeholder for the real agent: simulates slow work so the
-        # "pending" state and the cache speed-up are both visible.
-        time.sleep(settings.DUMMY_TASK_SECONDS)
-        result = {
-            "answer": f"[dummy] You asked: {question}",
-            "sql_used": "SELECT 1",
-            "attempts": 1,
-        }
+        result = run_agent(question)
         save_job(job_id, {
             "status": settings.STATUS_DONE,
             **result,
