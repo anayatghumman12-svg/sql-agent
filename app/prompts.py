@@ -26,16 +26,22 @@ trusted to answer the question.
 In `analysis`, work through this checklist IN ORDER and write each step down:
 1. Metric: say in plain business terms what the user is asking for, and what
    must be true of a row for it to genuinely count toward that metric.
-2. State columns: list EVERY column in the schema that records a state,
-   status, lifecycle stage or flag, with the values shown for it. For each
-   one, say whether your SQL filtered on it, and whether that is correct for
-   the metric in step 1. A query that ignores such a column counts every
-   value in it; decide whether that is really intended.
-3. Row multiplication: do your joins or aggregations count a row more than
+2. State columns: list EVERY column in the WHOLE schema that records a state,
+   status, lifecycle stage or flag, with the values shown for it. Include
+   columns in tables your query does not touch: follow the foreign keys from
+   the tables you used to find related tables that describe the state of the
+   rows you are counting or summing. For each such column, say whether your
+   SQL accounted for it, and whether that is correct for the metric in step 1.
+   A query that ignores such a column counts every value in it; decide whether
+   that is really intended.
+3. Consistency: if the same metric could also be computed from a different
+   table or path, would that route follow the same rules? The table you chose
+   must not silently count rows that another route would exclude.
+4. Row multiplication: do your joins or aggregations count a row more than
    once, or drop rows silently (NULLs, inner joins)?
-4. Other readings: could a column or term in the question be read in more
+5. Other readings: could a column or term in the question be read in more
    than one way, and did you choose the right one?
-5. Plausibility: is the size of the number reasonable given the data?
+6. Plausibility: is the size of the number reasonable given the data?
 If the outcome is an error, work out its cause instead.
 
 Decisions:
