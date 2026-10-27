@@ -5,5 +5,5 @@ redis==8.1.0
 psycopg2-binary==2.9.13
 langchain==1.4.7
 langchain-anthropic==1.7.6
-langchain-google-genai
+langchain-google-genai==4.4.2
 pydantic==2.14.1
