@@ -23,19 +23,37 @@ def run_agent_task(job_id: str, question: str) -> None:
     """
     logger.info("Job %s started: %r", job_id, question)
     try:
-        result = run_agent(question)
-        save_job(job_id, {
-            "status": settings.STATUS_DONE,
-            **result,
-            "cached": False,
-        })
-        # Only successful answers are cached; failures are never stored.
-        store_cached_answer(question, result)
-        logger.info("Job %s finished", job_id)
-    except Exception:
+        outcome = run_agent(question)
+        # Routing on the agent's own outcome (trusted answer vs gave up).
+        if outcome.succeeded:
+            result = {
+                "answer": outcome.answer,
+                "sql_used": outcome.sql_used,
+                "attempts": outcome.attempts,
+            }
+            save_job(job_id, {
+                "status": settings.STATUS_DONE,
+                **result,
+                "cached": False,
+            })
+            # Only trusted answers are cached; failures never are.
+            store_cached_answer(question, result)
+        else:
+            # sql_used and attempts stay visible even on failure.
+            save_job(job_id, {
+                "status": settings.STATUS_FAILED,
+                "reason": outcome.reason,
+                "sql_used": outcome.sql_used,
+                "attempts": outcome.attempts,
+            })
+        logger.info(
+            "Job %s finished (succeeded=%s, attempts=%d)",
+            job_id, outcome.succeeded, outcome.attempts,
+        )
+    except Exception as exc:
         # A crashing worker must not leave the job "pending" forever.
         logger.exception("Job %s crashed", job_id)
         save_job(job_id, {
             "status": settings.STATUS_FAILED,
-            "reason": settings.REASON_INTERNAL_ERROR,
+            "reason": f"{settings.REASON_INTERNAL_ERROR} ({type(exc).__name__})",
         })
